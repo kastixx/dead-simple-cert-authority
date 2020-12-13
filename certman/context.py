@@ -29,10 +29,10 @@ class Context:
     request = None
     ca_certificates = None
 
-    def __init__(self, basename, cert_dir=None, key_dir=None):
-        self.cert_dir = cert_dir or os.path.abspath(os.curdir)
-        self.key_dir = key_dir or cert_dir
+    def __init__(self, basename, ca_context=None, is_ca=False):
         self.basename = basename
+        self.ca_context = ca_context
+        self.is_ca = is_ca
 
     def add(self, output):
         parts, outside = self.parse_fenced_output(output)
@@ -50,43 +50,9 @@ class Context:
 
         return outside
 
-    @property
-    def certificate_path(self):
-        return os.path.join(self.cert_dir, self.basename + self.CERT_SUFFIX)
-
-    @property
-    def private_key_path(self):
-        return os.path.join(self.key_dir, self.basename + self.KEY_SUFFIX)
-
-    @property
-    def rsa_private_key_path(self):
-        return os.path.join(self.key_dir, self.basename + self.RSA_KEY_SUFFIX)
-
-    @property
-    def request_path(self):
-        return os.path.join(self.cert_dir, self.basename + self.REQUEST_SUFFIX)
-
-    def store(self, with_request=False, require_rsa=False):
-        certificate = self.require_certificate
-        with open(self.certificate_path, 'wt') as fd:
-            fd.write(certificate)
-
-        private_key = self.require_private_key
-        with open(self.private_key_path, 'wt') as fd:
-            fd.write(private_key)
-
-        if require_rsa:
-            rsa_private_key = self.require_rsa_private_key
-        else:
-            rsa_private_key = self.rsa_private_key
-        if rsa_private_key:
-            with open(self.rsa_private_key_path, 'wt') as fd:
-                fd.write(rsa_private_key)
-
-        if with_request:
-            request = self.require_request
-            with open(self.request_path, 'wt') as fd:
-                fd.write(request)
+    def add_from_file(self, path):
+        with open(path, 'rt') as fd:
+            self.add(fd.read())
 
     @property
     def require_private_key(self):

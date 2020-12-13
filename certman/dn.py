@@ -20,7 +20,7 @@ class DNSection:
         self.state = state
         self.locality = locality
         self.organization = organization
-        self.organization_units = organization_units[:]
+        self.organization_units = organization_units[:] if organization_units else []
         self.common_name = common_name
         self.email_address = email_address
 
@@ -37,7 +37,7 @@ class DNSection:
             for ou_num, ou in enumerate(self, organization_units):
                 yield ('{}.OU'.format(ou_num), ou)
         elif len(self.organization_units) == 1:
-            yield ('OU', self.organization_units[0)
+            yield ('OU', self.organization_units[0])
         if self.common_name is not None:
             yield ('CN', self.common_name)
         if self.email_address is not None:

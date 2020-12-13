@@ -26,7 +26,7 @@ class OpenSSL:
         return proc.stdout
 
     def add_rsa_key(self, context):
-        output = self.run('rsa', input=context.require_private_key)
+        output = self.run(['rsa'], input=context.require_private_key)
         context.add(output)
         return context
 
@@ -42,13 +42,14 @@ class OpenSSL:
         context.add(output)
         return context
 
-    def signed(self, context, request, ca_context):
+    def signed(self, context, request, ca_paths):
         self.request(context, request)
         output = self.run([
             'x509', '-req', '-in', '-',
-            '-CA', ca_context.certificate_path,
-            '-CAkey', ca_context.private_key_path,
+            '-CA', ca_paths.cert,
+            '-CAkey', ca_paths.key,
             '-days', str(request.days),
+            '-CAcreateserial',
             ], input=context.require_request)
         context.add(output)
         return context

@@ -44,18 +44,19 @@ class Request:
         req['default_bits'] = self.bits
         req['default_md'] = self.hash_algo
         req['distinguished_name'] = 'req_dn'
-        req['req_extensions'] = 'req_ext'
+        req['req_extensions'] = 'v3_ext'
+        req['x509_extensions'] = 'v3_ext'
         req['encrypt_key'] = 'no'
         req['prompt'] = 'no'
 
         config['req_dn'] = self.dn.ordered_dict
 
-        req_ext = config['req_ext']
+        v3_ext = config['v3_ext']
         if self.is_ca:
-            req_ext['basicConstraints'] = 'critical, CA:TRUE'
+            v3_ext['basicConstraints'] = 'critical, CA:TRUE'
 
         if self.domain_names:
-            req_ext['subjectAltName'] = '@req_subject'
+            v3_ext['subjectAltName'] = '@req_subject'
             req_subject = config['req_subject']
 
             for num, name in enumerate(self.domain_names):

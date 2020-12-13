@@ -14,7 +14,7 @@ class Config:
     def __setitem__(self, key, value):
         self.sections[key] = value
 
-    def __getitem__(self, key);
+    def __getitem__(self, key):
         try:
             return self.sections[key]
         except KeyError:
