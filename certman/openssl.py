@@ -4,6 +4,7 @@ import subprocess
 import re
 
 from .context import Context
+from .temporary import make_temp_file
 
 TIMEOUT = 30
 
@@ -32,9 +33,10 @@ class OpenSSL:
 
     def request(self, context, request):
         cfg_text = request.config.generate
-        output = self.run('req -new -config -'.split(), input=cfg_text)
+        tmp_path = make_temp_file(cfg_text)
+        output = self.run(['req', '-new', '-config', tmp_path])
         context.add(output)
-        return context
+        return context, tmp_path
 
     def self_signed(self, context, request):
         cfg_text = request.config.generate
@@ -43,13 +45,14 @@ class OpenSSL:
         return context
 
     def signed(self, context, request, ca_paths):
-        self.request(context, request)
+        _, tmp_path = self.request(context, request)
         output = self.run([
             'x509', '-req', '-in', '-',
             '-CA', ca_paths.cert,
             '-CAkey', ca_paths.key,
             '-days', str(request.days),
             '-CAcreateserial',
+            '-extfile', tmp_path, '-extensions', 'v3_ext',
             ], input=context.require_request)
         context.add(output)
         return context

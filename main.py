@@ -5,32 +5,32 @@ import os, sys, argparse
 from certman import *
 
 def command_line_add_common_request_args(cmd_parser):
-    ca_parser.add_argument("-c", "--common-name", "--cn",
-                           help="set Common Name (CN) field of the Distinguished Name (DN), "
-                                "certificate name is used by default")
-    ca_parser.add_argument("-U", "--organization-unit", "--ou",
-                           help="set Organization Unit (OU) field of the DN, "
-                                "can be specified several times",
-                           action="append")
-    ca_parser.add_argument("-O", "--organization", "--org",
-                           help="set Organization Unit (OU) field of the DN")
-    ca_parser.add_argument("-L", "--locality",
-                           help="set Locality (L) field of the DN")
-    ca_parser.add_argument("-S", "--state",
-                           help="set State (ST) field of the DN")
-    ca_parser.add_argument("-C", "--country",
-                           help="set Country (C) field of the DN")
-    ca_parser.add_argument("-E", "--email",
-                           help="set emailAddress field of the DN")
-    ca_parser.add_argument("-b", "--bits", metavar='N',
-                           help="use key of N bits long, N = 2048 or 4096 (default)",
-                           type=int, choices=(2048, 4096), default=4096)
-    ca_parser.add_argument("-H", "--hash",
-                           help="use specified hash algorithm, either sha256 or sha512 (default)",
-                           choices=('sha256', 'sha512'), default='sha512')
-    ca_parser.add_argument("-d", "--days",
-                           help="set certificate validity period in days, default is 3650",
-                           type=int, default=3650)
+    cmd_parser.add_argument("-c", "--common-name", "--cn",
+                            help="set Common Name (CN) field of the Distinguished Name (DN), "
+                                 "certificate name is used by default")
+    cmd_parser.add_argument("-U", "--organization-unit", "--ou",
+                            help="set Organization Unit (OU) field of the DN, "
+                                 "can be specified several times",
+                            action="append")
+    cmd_parser.add_argument("-O", "--organization", "--org",
+                            help="set Organization Unit (OU) field of the DN")
+    cmd_parser.add_argument("-L", "--locality",
+                            help="set Locality (L) field of the DN")
+    cmd_parser.add_argument("-S", "--state",
+                            help="set State (ST) field of the DN")
+    cmd_parser.add_argument("-C", "--country",
+                            help="set Country (C) field of the DN")
+    cmd_parser.add_argument("-E", "--email",
+                            help="set emailAddress field of the DN")
+    cmd_parser.add_argument("-b", "--bits", metavar='N',
+                            help="use key of N bits long, N = 2048 or 4096 (default)",
+                            type=int, choices=(2048, 4096), default=4096)
+    cmd_parser.add_argument("-H", "--hash",
+                            help="use specified hash algorithm, either sha256 or sha512 (default)",
+                            choices=('sha256', 'sha512'), default='sha512')
+    cmd_parser.add_argument("-d", "--days",
+                            help="set certificate validity period in days, default is 3650",
+                            type=int, default=3650)
 
 
 def command_line_parser():
@@ -114,7 +114,7 @@ def create_cert(args, is_ca=False):
         openssl.self_signed(context, req)
 
     openssl.add_rsa_key(context)
-    store.store(context, require_rsa=True)
+    store.store(context, require_rsa=True, with_request=bool(args.ca))
 
 
 def handle_cert(args):
@@ -133,12 +133,15 @@ def main():
         if args.command == 'ca':
             handle_ca(args)
         elif args.command == 'cert':
-            handle_ca(args)
+            handle_cert(args)
         else:
             parser.print_usage()
             sys.exit(127)
 
+        clean_temp_files()
+
     except Exception as e:
+        clean_temp_files()
         print(str(e), file=sys.stderr)
         sys.exit(1)
 
