@@ -52,9 +52,11 @@ class Request:
 
         v3_ext = config['v3_ext']
         if self.is_ca:
-            v3_ext['basicConstraints'] = 'critical, CA:TRUE'
+            v3_ext['basicConstraints'] = 'CA:TRUE'
+            v3_ext['keyUsage'] = 'keyCertSign, cRLSign'
         else:
-            v3_ext['basicConstraints'] = 'critical, CA:FALSE'
+            v3_ext['basicConstraints'] = 'CA:FALSE'
+            v3_ext['extendedKeyUsage'] = 'serverAuth, clientAuth'
 
         if self.domain_names:
             v3_ext['subjectAltName'] = '@req_subject'
