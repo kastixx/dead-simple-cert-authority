@@ -22,6 +22,10 @@ class Store:
         self.root_dir = root_dir or os.path.abspath(os.curdir)
         self.key_dir = key_dir or os.path.join(self.root_dir, self.PRIVATE_KEY_SUBDIR)
 
+    @classmethod
+    def self_signed_context(cls):
+        return Context(cls.SELF_SIGNED_SUBDIR, is_ca=True)
+
     def make_store_basepaths(self, basename, cert_dir, key_dir=None):
         if not key_dir:
             key_dir = os.path.join(cert_dir, self.PRIVATE_KEY_SUBDIR)
@@ -34,6 +38,24 @@ class Store:
 
         return (os.path.join(cert_dir, basename), os.path.join(key_dir, basename))
 
+    def load_context(self, context, load_cert=False, load_key=False,
+                     load_rsa_key=False, load_req=False):
+        paths = self.get_context_paths(context)
+
+        self.verify_exists(context, paths, check_cert=load_cert, check_key=load_key,
+                           check_rsa_key=load_rsa_key, check_req=load_req)
+
+        if load_cert:
+            context.add_from_file(paths.cert)
+        if load_key:
+            context.add_from_file(paths.key)
+        if load_rsa_key:
+            context.add_from_file(paths.rsa_key)
+        if load_req:
+            context.add_from_file(paths.req)
+
+        return context
+
     def verify_exists(self, context, paths=None,
                       check_cert=False, check_key=False,
                       check_rsa_key=False, check_req=False, inverted_check=False):
@@ -42,7 +64,7 @@ class Store:
 
         failed_item = None
 
-        if check_req and inverted_check is os.path.exists(paths.cert):
+        if check_cert and inverted_check is os.path.exists(paths.cert):
             failed_item = "cert"
         elif check_key and inverted_check is os.path.exists(paths.key):
             failed_item = "key"
@@ -57,7 +79,7 @@ class Store:
         if context.is_ca:
             description = "CA certificate {}".format(
                     context.basename)
-        elif context.ca_context:
+        elif context.ca_context and context.ca_context.basename != self.SELF_SIGNED_SUBDIR:
             description = "certificate {} signed by CA {}".format(
                     context.basename, context.ca_context.basename)
         else:
