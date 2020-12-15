@@ -5,10 +5,6 @@ import os
 
 class Context:
     RE_PARSE_FENCED = re.compile('(.*?)-----BEGIN\\s(.+?)-----\n.*?-----END\\s(.+?)-----\n', re.S)
-    CERT_SUFFIX = '.pem'
-    KEY_SUFFIX = '.key'
-    RSA_KEY_SUFFIX = '.rsa'
-    REQUEST_SUFFIX = '.req'
 
     def parse_fenced_output(self, output):
         parts = []
