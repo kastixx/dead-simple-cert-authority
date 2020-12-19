@@ -32,9 +32,9 @@ class DNSection:
         if self.locality is not None:
             yield ('L', self.locality)
         if self.organization is not None:
-            yield ('C', self.organization)
+            yield ('O', self.organization)
         if len(self.organization_units) > 1:
-            for ou_num, ou in enumerate(self, organization_units):
+            for ou_num, ou in enumerate(self.organization_units):
                 yield ('{}.OU'.format(ou_num), ou)
         elif len(self.organization_units) == 1:
             yield ('OU', self.organization_units[0])

@@ -3,7 +3,6 @@ __all__ = [ 'OpenSSL' ]
 import subprocess
 import re
 
-from .context import Context
 from .temporary import make_temp_file
 
 TIMEOUT = 30
