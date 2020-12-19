@@ -4,6 +4,7 @@ import subprocess
 import re
 
 from .temporary import make_temp_file
+from .certinfo import CertInfo
 
 TIMEOUT = 30
 
@@ -55,3 +56,12 @@ class OpenSSL:
             ], input=context.require_request)
         context.add(output)
         return context
+
+    def get_info(self, context):
+        output = self.run([
+            'x509', '-in', '-', '-noout',
+            '-dates', '-subject', '-issuer', '-email', '-fingerprint',
+            '-ext', 'basicConstraints,keyUsage,subjectAltName',
+            '-nameopt', 'esc_2253,esc_2254,esc_ctrl,utf8,sep_comma_plus_space',
+            ], input=context.require_certificate)
+        return CertInfo.parse(output)

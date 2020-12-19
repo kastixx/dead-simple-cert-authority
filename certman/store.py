@@ -39,8 +39,18 @@ class Store:
         return (os.path.join(cert_dir, basename), os.path.join(key_dir, basename))
 
     def load_context(self, context, load_cert=False, load_key=False,
-                     load_rsa_key=False, load_req=False):
+                     load_rsa_key=False, load_req=False, reload=False):
         paths = self.get_context_paths(context)
+
+        if not reload:
+            if context.certificate:
+                load_cert = False
+            if context.private_key:
+                load_key = False
+            if context.rsa_private_key:
+                load_rsa_key = False
+            if context.request:
+                load_req = False
 
         self.verify_exists(context, paths, check_cert=load_cert, check_key=load_key,
                            check_rsa_key=load_rsa_key, check_req=load_req)
@@ -122,6 +132,34 @@ class Store:
                                      key_basepath + self.KEY_SUFFIX,
                                      key_basepath + self.RSA_KEY_SUFFIX,
                                      cert_basepath + self.REQUEST_SUFFIX)
+
+    def get_ca_certs(self):
+        try:
+            files = list(f for f in os.listdir(self.root_dir) if f.endswith(self.CERT_SUFFIX))
+        except FileNotFoundError:
+            return
+
+        for f in files:
+            basename, _ = os.path.splitext(f)
+            context = Context(basename, is_ca=True)
+            self.load_context(context, load_cert=True)
+            yield context
+
+    def get_certs(self, context):
+        ca_basepath, _ = self.make_store_basepaths(
+                context.basename, self.root_dir, self.key_dir)
+        ca_dir = ca_basepath + self.CA_DIR_SUFFIX
+
+        try:
+            files = list(f for f in os.listdir(ca_dir) if f.endswith(self.CERT_SUFFIX))
+        except FileNotFoundError:
+            return
+
+        for f in files:
+            basename, _ = os.path.splitext(f)
+            ctx = Context(basename, ca_context=context)
+            self.load_context(ctx, load_cert=True)
+            yield ctx
 
     @staticmethod
     def restricted_opener(filename, flags):

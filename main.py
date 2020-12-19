@@ -100,6 +100,8 @@ def command_line_parser():
                                       "Use '/NAME' form (with no CA_NAME) to retrieve a self-signed "
                                       "certificate (alternative to -s option)")
 
+    get_tree_parser = subparsers.add_parser("tree", help="list all certificates in the store")
+
     return parser
 
 
@@ -204,6 +206,57 @@ def handle_get_cert(args):
     write_context(args, context)
 
 
+def handle_tree(args):
+    openssl = OpenSSL()
+    store = create_store(args)
+    root_cas = []
+    ca_map = {}
+    virtual_ca_map = {}
+
+    for ca_context in store.get_ca_certs():
+        cert_info = openssl.get_info(ca_context)
+        ca_map[cert_info.subject] = (cert_info, [], ca_context)
+
+    for record in ca_map.values():
+        issuer = record[0].issuer
+        if issuer == record[0].subject:
+            root_cas.append((issuer,) + record)
+            continue
+
+        parent_record = ca_map.get(issuer, None)
+        if parent_record:
+            parent_record[1].append(record)
+            continue
+
+        virtual_parent_record = virtual_ca_map.get(issuer, None)
+        if not virtual_parent_record:
+            virtual_parent_record = (None, [], None)
+            virtual_ca_map[issuer] = virtual_parent_record
+            root_cas.append((issuer,) + virtual_parent_record)
+
+        virtual_parent_record[1].append(record)
+
+    for subject, info, cas, certs in sorted(root_cas, key=(lambda r: r[0])):
+        cert_tree_level(openssl, store, subject, info, cas, certs)
+
+
+def cert_tree_level(openssl, store, subject, info, cas, context, indent=''):
+    if info:
+        print('{}* {}:'.format(indent, subject))
+    else:
+        print('{}* [{}]:'.format(indent, subject))
+
+    for info, inner_cas, inner_certs in cas:
+        cert_tree_level(openssl, store, info.subject, info, inner_cas, inner_certs, indent=(indent + '  '))
+
+    if not context:
+        return
+
+    for cert_ctx in store.get_certs(context):
+        info = openssl.get_info(cert_ctx)
+        print('{}  - {}'.format(indent, info.subject))
+
+
 def main():
     parser = command_line_parser()
     args = parser.parse_args()
@@ -217,6 +270,8 @@ def main():
             handle_get_ca(args)
         elif args.command == 'get-cert':
             handle_get_cert(args)
+        elif args.command == 'tree':
+            handle_tree(args)
         else:
             parser.print_usage()
             sys.exit(127)

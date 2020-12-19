@@ -4,7 +4,6 @@
 default_bits = 4096
 #default_keyfile = privkey.pem
 distinguished_name = req_dn
-attributes = req_attr
 prompt = no
 #output_password = mypass
 req_extensions = req_ext
@@ -21,12 +20,11 @@ O = Acme Company
 CN = Primary Web CA
 emailAddress = admin@example.com
 
-[ req_attr ]
-#challengePassword = chapass
-
 [ req_ext ]
 basicConstraints = critical, CA:true
+extendedKeyUsage = serverAuth, clientAuth
 subjectAltName = @req_subject
 
 [ req_subject ]
 DNS.1 = web-ca.inet.example.com
+DNS.2 = *.web-ca.inet.example.com
