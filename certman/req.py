@@ -47,6 +47,7 @@ class Request:
         req['encrypt_key'] = 'no'
         req['prompt'] = 'no'
         req['req_extensions'] = 'v3_ext'
+        req['x509_extensions'] = 'v3_ext'
 
         config['req_dn'] = self.dn.ordered_dict
 
