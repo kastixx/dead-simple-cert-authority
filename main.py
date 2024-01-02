@@ -152,7 +152,7 @@ def create_cert(args, is_ca=False):
         openssl.self_signed(context, req)
 
     openssl.add_rsa_key(context)
-    store.store(context, require_rsa=True, with_request=bool(args.ca))
+    store.store(context, with_request=bool(args.ca))
 
 
 def handle_cert(args):
